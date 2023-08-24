@@ -1,2 +1,2 @@
 # DevOps-Project-Petclinic
-Project Fil Rouge DataScientest : DevOps Petclinic
+Fil Rouge Project DataScientest : DevOps Petclinic application
