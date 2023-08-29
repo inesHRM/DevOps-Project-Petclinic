@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-server
+  namespace: petclinic
+  labels:
+    app: config-server
+spec:
+  containers:
+    - name: config-server
+      image: 962480255828.dkr.ecr.eu-west-3.amazonaws.com/devops_petclinic_1:devops_spring-petclinic-config-server
+      imagePullPolicy: Always
+      ports:
+        - containerPort: 8888
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-server
+  namespace: petclinic
+spec:
+  selector:
+    app: config-server
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8888
+      targetPort: 8888
+
