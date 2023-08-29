@@ -9,7 +9,7 @@ terraform {
 
 provider "aws" {
   region                   = "eu-west-3"
-  shared_credentials_files = ["/home/inesh/.aws/credentials"]
+  shared_credentials_files = ["xxxxxxx"]
   profile                  = "deploy_admin"
 }
 
