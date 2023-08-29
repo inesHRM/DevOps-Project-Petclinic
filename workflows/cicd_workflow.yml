@@ -1,0 +1,118 @@
+name: Petclinic CICD with Github Actions demo
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ '17' ]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Run a one-line script
+      run: echo build dokcer images!
+
+  build-config-server:
+    uses: inesHRM/Project_Petclinic_1/.github/workflows/build-docker-image.yml@main
+    with:
+      image_name: spring-petclinic-config-server
+      tag:  3.0.2
+      port: 8888
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  build-discovery-server:
+    uses: inesHRM/Project_Petclinic_1/.github/workflows/build-docker-image.yml@main
+    with:
+      image_name: spring-petclinic-discovery-server
+      tag:  3.0.2
+      port: 8761
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+   
+  build-api-gateway:
+    uses: inesHRM/Project_Petclinic_1/.github/workflows/build-docker-image.yml@main
+    with:
+      image_name: spring-petclinic-api-gateway
+      tag:  3.0.2
+      port: 8080
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    
+  
+  build-admin-server:
+    uses: inesHRM/Project_Petclinic_1/.github/workflows/build-docker-image.yml@main
+    with:
+      image_name: spring-petclinic-admin-server
+      tag:  3.0.2
+      port: 9090
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  build-customers-service:
+    uses: inesHRM/Project_Petclinic_1/.github/workflows/build-docker-image.yml@main
+    with:
+      image_name: spring-petclinic-customers-service
+      tag:  3.0.2
+      port: 8081
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+
+  build-vets-service:
+    uses: inesHRM/Project_Petclinic_1/.github/workflows/build-docker-image.yml@main
+    with:
+      image_name: spring-petclinic-vets-service
+      tag:  3.0.2
+      port: 8083
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  build-visits-service:
+    uses: inesHRM/Project_Petclinic_1/.github/workflows/build-docker-image.yml@main
+    with:
+      image_name: spring-petclinic-visits-service
+      tag:  3.0.2
+      port: 8082
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+
+  Deploy-to-eks-cluster:
+    needs: [build-vets-service, build-visits-service, build-customers-service, build-admin-server, build-api-gateway, build-discovery-server, build-config-server]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: Update kube config
+        run: aws eks update-kubeconfig --region eu-west-3 --name petclinic-eks-cluster
+
+      - name: Deploy to EKS
+        run: | 
+          kubectl apply -f eks-namespace.yaml
+          kubectl replace -f kubernetes/ --force
+        
+    
